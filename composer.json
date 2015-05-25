@@ -1,0 +1,27 @@
+{
+    "name": "hustshenl/yii2-ucenter",
+    "description": "Yii2 UCenter user integration",
+    "keywords": ["yii2", "user", "ucenter"],
+    "type": "yii2-extension",
+    "license": "BSD",
+    "support": {
+        "issues": "https://github.com/hustshenl/yii2-ucenter/issues",
+        "wiki": "https://github.com/hustshenl/yii2-ucenter/wiki",
+        "source": "https://github.com/hustshenl/yii2-ucenter"
+    },
+    "authors": [
+        {
+            "name": "Shen.L",
+            "email": "shen@shenl.com"
+        }
+    ],
+    "require": {
+        "yiisoft/yii2": "*",
+        "kartik-v/yii2-grid": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "hustshenl\\ucenter\\": ""
+        }
+    }
+}
