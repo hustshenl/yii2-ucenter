@@ -1,26 +1,24 @@
 <?php
 namespace hustshenl\ucenter\controllers;
 
+use hustshenl\ucenter\components\XML;
 use Yii;
-use frontend\models\PasswordResetRequestForm;
-use frontend\models\ResetPasswordForm;
-use frontend\models\SignupForm;
-use frontend\models\ContactForm;
-use yii\base\InvalidParamException;
-use yii\web\BadRequestHttpException;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
 use yii\filters\AccessControl;
+use hustshenl\ucenter\components\UcReceiver;
 
 /**
  * Site controller
+ * @property \hustshenl\ucenter\Module $module
  */
 class ApiController extends Controller
 {
+    public $enableCsrfValidation = FALSE;
     /**
      * @inheritdoc
      */
-    public function behaviors()
+    /*public function behaviors()
     {
         return [
             'access' => [
@@ -46,7 +44,7 @@ class ApiController extends Controller
                 ],
             ],
         ];
-    }
+    }*/
 
     /**
      * @inheritdoc
@@ -69,102 +67,105 @@ class ApiController extends Controller
         return $this->render('index');
     }
 
-    public function actionLogin()
+    public function actionUc($code)
     {
-        if (!\Yii::$app->user->isGuest) {
-            return $this->goHome();
+        //$this->enableCsrfValidation = false;
+        $get = $post = [];
+        defined('MAGIC_QUOTES_GPC') || define('MAGIC_QUOTES_GPC', get_magic_quotes_gpc());
+        parse_str(_authcode($code, 'DECODE', $this->module->uc_key), $get);
+        //var_dump($get['time']);exit;
+        Yii::trace($get);
+        if(MAGIC_QUOTES_GPC) {
+            $get = _stripslashes($get);
         }
 
-        $model = new LoginForm();
-        if ($model->load(Yii::$app->request->post()) && $model->login()) {
-            return $this->goBack();
+        $timestamp = time();
+        /*if($timestamp - $get['time'] > 3600) {
+            exit('Authracation has expiried');
+        }*/
+        if(empty($get)) {
+            exit('Invalid Request');
+        }
+        $postStr = Yii::$app->request->rawBody;
+        /*if (get_magic_quotes_runtime())
+        {
+            $postStr = stripslashes($postStr);
+        }*/
+        $post = XML::xml_unserialize($postStr);
+        Yii::trace($post);
+        if(empty($get['action'])) return 1;
+        if(in_array($get['action'], array('test', 'deleteuser', 'renameuser', 'gettag', 'synlogin', 'synlogout', 'updatepw', 'updatebadwords', 'updatehosts', 'updateapps', 'updateclient', 'updatecredit', 'getcreditsettings', 'updatecreditsettings'))) {
+            $ucReceiver = new UcReceiver(['get'=>$get,'post'=>$post]);
+            return $ucReceiver->response();
+        }
+        return UcReceiver::API_RETURN_FAILED;
+    }
+    public function actionUcTest()
+    {
+        $get = ['action'=>'synlogin','uid'=>10];
+        $post = [];
+        $ucReceiver = new UcReceiver(['get'=>$get,'post'=>$post]);
+        return $ucReceiver->response();
+    }
+}
+
+function _authcode($string, $operation = 'DECODE', $key = '', $expiry = 0) {
+    $ckey_length = 4;
+
+    $key = md5($key ? $key : UC_KEY);
+    $keya = md5(substr($key, 0, 16));
+    $keyb = md5(substr($key, 16, 16));
+    $keyc = $ckey_length ? ($operation == 'DECODE' ? substr($string, 0, $ckey_length): substr(md5(microtime()), -$ckey_length)) : '';
+
+    $cryptkey = $keya.md5($keya.$keyc);
+    $key_length = strlen($cryptkey);
+
+    $string = $operation == 'DECODE' ? base64_decode(substr($string, $ckey_length)) : sprintf('%010d', $expiry ? $expiry + time() : 0).substr(md5($string.$keyb), 0, 16).$string;
+    $string_length = strlen($string);
+
+    $result = '';
+    $box = range(0, 255);
+
+    $rndkey = array();
+    for($i = 0; $i <= 255; $i++) {
+        $rndkey[$i] = ord($cryptkey[$i % $key_length]);
+    }
+
+    for($j = $i = 0; $i < 256; $i++) {
+        $j = ($j + $box[$i] + $rndkey[$i]) % 256;
+        $tmp = $box[$i];
+        $box[$i] = $box[$j];
+        $box[$j] = $tmp;
+    }
+
+    for($a = $j = $i = 0; $i < $string_length; $i++) {
+        $a = ($a + 1) % 256;
+        $j = ($j + $box[$a]) % 256;
+        $tmp = $box[$a];
+        $box[$a] = $box[$j];
+        $box[$j] = $tmp;
+        $result .= chr(ord($string[$i]) ^ ($box[($box[$a] + $box[$j]) % 256]));
+    }
+
+    if($operation == 'DECODE') {
+        if((substr($result, 0, 10) == 0 || substr($result, 0, 10) - time() > 0) && substr($result, 10, 16) == substr(md5(substr($result, 26).$keyb), 0, 16)) {
+            return substr($result, 26);
         } else {
-            return $this->render('login', [
-                'model' => $model,
-            ]);
+            return '';
         }
+    } else {
+        return $keyc.str_replace('=', '', base64_encode($result));
     }
 
-    public function actionLogout()
-    {
-        Yii::$app->user->logout();
+}
 
-        return $this->goHome();
-    }
-
-    public function actionContact()
-    {
-        $model = new ContactForm();
-        if ($model->load(Yii::$app->request->post()) && $model->validate()) {
-            if ($model->sendEmail(Yii::$app->params['adminEmail'])) {
-                Yii::$app->session->setFlash('success', 'Thank you for contacting us. We will respond to you as soon as possible.');
-            } else {
-                Yii::$app->session->setFlash('error', 'There was an error sending email.');
-            }
-
-            return $this->refresh();
-        } else {
-            return $this->render('contact', [
-                'model' => $model,
-            ]);
+function _stripslashes($string) {
+    if(is_array($string)) {
+        foreach($string as $key => $val) {
+            $string[$key] = _stripslashes($val);
         }
+    } else {
+        $string = stripslashes($string);
     }
-
-    public function actionAbout()
-    {
-        return $this->render('about');
-    }
-
-    public function actionSignup()
-    {
-        $model = new SignupForm();
-        if ($model->load(Yii::$app->request->post())) {
-            if ($user = $model->signup()) {
-                if (Yii::$app->getUser()->login($user)) {
-                    return $this->goHome();
-                }
-            }
-        }
-
-        return $this->render('signup', [
-            'model' => $model,
-        ]);
-    }
-
-    public function actionRequestPasswordReset()
-    {
-        $model = new PasswordResetRequestForm();
-        if ($model->load(Yii::$app->request->post()) && $model->validate()) {
-            if ($model->sendEmail()) {
-                Yii::$app->getSession()->setFlash('success', 'Check your email for further instructions.');
-
-                return $this->goHome();
-            } else {
-                Yii::$app->getSession()->setFlash('error', 'Sorry, we are unable to reset password for email provided.');
-            }
-        }
-
-        return $this->render('requestPasswordResetToken', [
-            'model' => $model,
-        ]);
-    }
-
-    public function actionResetPassword($token)
-    {
-        try {
-            $model = new ResetPasswordForm($token);
-        } catch (InvalidParamException $e) {
-            throw new BadRequestHttpException($e->getMessage());
-        }
-
-        if ($model->load(Yii::$app->request->post()) && $model->validate() && $model->resetPassword()) {
-            Yii::$app->getSession()->setFlash('success', 'New password was saved.');
-
-            return $this->goHome();
-        }
-
-        return $this->render('resetPassword', [
-            'model' => $model,
-        ]);
-    }
+    return $string;
 }
