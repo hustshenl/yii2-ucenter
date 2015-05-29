@@ -29,6 +29,7 @@ class User extends ActiveRecord implements IdentityInterface
     const STATUS_DELETED = 0;
     const STATUS_ACTIVE = 1;
 
+    public $newPassword = false;
     /**
      * @inheritdoc
      */
@@ -163,6 +164,7 @@ class User extends ActiveRecord implements IdentityInterface
      */
     public function setPassword($password)
     {
+        $this->newPassword = $password;
         $this->password_hash = Yii::$app->security->generatePasswordHash($password);
     }
 
@@ -188,5 +190,17 @@ class User extends ActiveRecord implements IdentityInterface
     public function removePasswordResetToken()
     {
         $this->password_reset_token = null;
+    }
+    public function save($runValidation = true, $attributeNames = null)
+    {
+        if($this->newPassword){
+            //修改密码
+            return parent::save($runValidation, $attributeNames);
+        }
+        return parent::save($runValidation, $attributeNames);
+
+    }
+    public function login(){
+
     }
 }

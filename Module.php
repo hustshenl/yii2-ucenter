@@ -32,9 +32,6 @@ class Module extends \yii\base\Module
 
 
 
-
-
-
     /**
      * @var string Main layout using for module. Default to layout of parent module.
      * Its used when `layout` set to 'left-menu', 'right-menu' or 'top-menu'.
@@ -61,14 +58,6 @@ class Module extends \yii\base\Module
         }
 
         Yii::$app->cache->cachePath = Yii::getAlias($this->cachePath);
-        Yii::trace(Yii::$app->cache->cachePath);
-        //user did not define the Navbar?
-        /*if ($this->navbar === null) {
-            $this->navbar = [
-                ['label' => Yii::t('hustshenl-ucenter', 'Help'), 'url' => 'https://github.com/hustshenl/ucenter/blob/master/docs/guide/basic-usage.md'],
-                ['label' => Yii::t('hustshenl-ucenter', 'Application'), 'url' => Yii::$app->homeUrl]
-            ];
-        }*/
     }
 
 
