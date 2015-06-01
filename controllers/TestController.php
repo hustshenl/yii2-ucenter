@@ -36,8 +36,8 @@ class TestController extends Controller
     public function actionIndex()
     {
         $client = new Client();
-        $user = $client->user_login('1234', '123');
-        return $user[0];
+        $user = $client->user_login('abc4','123456','abc4@123.com');
+        return var_dump($user);
     }
 
 }

@@ -14,8 +14,10 @@ class Module extends \yii\base\Module
     //数据库相关 (mysql 连接时, 并且没有设置 UC_DBLINK 时, 需要配置以下变量)
     public $uc_db;
     /*[
-    'class' => 'yii\db\Connection',
-    'dsn' => 'mysql:host=localhost;dbname=sinmh',
+    //'class' => 'yii\db\Connection',
+    //'dsn' => 'mysql:host=localhost;dbname=sinmh',
+    'host' => 'localhost',
+    'dbname' => 'sinmh'
     'username' => 'sinmh',
     'password' => 'QUJEqBtAeAnK8uEV',
     'charset' => 'utf8',
@@ -39,6 +41,7 @@ class Module extends \yii\base\Module
     public $mainLayout = '@hustshenl/ucenter/views/layouts/main.php';
 
     public $cachePath = '@runtime/ucenter';
+    public $caheDuration = 86400;
 
     /**
      * @inheritdoc
