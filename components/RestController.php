@@ -15,7 +15,7 @@ use yii\web\Response;
 class RestController extends Controller {
     protected $_callback = false;
     public $serializer = [
-        'class' => 'api\components\Serializer',
+        'class' => 'common\components\Serializer',
         'collectionEnvelope' => 'data',
     ];
     public function behaviors()
