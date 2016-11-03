@@ -243,7 +243,7 @@ class UcReceiver extends Component
         if(!self::API_GET_CREDIT_SETTINGS) {
             return self::API_RETURN_FORBIDDEN;
         }
-        return XML::xml_serialize([1=>['积分','']]);
+        return Xml::xml_serialize([1=>['积分','']]);
         $credits = array();
         foreach($_G['setting']['extcredits'] as $id => $extcredits) {
             $credits[$id] = array(strip_tags($extcredits['title']), $extcredits['unit']);

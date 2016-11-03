@@ -2,7 +2,7 @@
 namespace hustshenl\ucenter\controllers;
 
 use hustshenl\ucenter\components\Client;
-use hustshenl\ucenter\components\XML;
+use hustshenl\ucenter\components\Xml;
 use Yii;
 use yii\web\Controller;
 use yii\filters\VerbFilter;

@@ -1,7 +1,7 @@
 <?php
 namespace hustshenl\ucenter\controllers;
 
-use hustshenl\ucenter\components\XML;
+use hustshenl\ucenter\components\Xml;
 use Yii;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
@@ -91,7 +91,7 @@ class ApiController extends Controller
         {
             $postStr = stripslashes($postStr);
         }*/
-        $post = XML::xml_unserialize($postStr);
+        $post = Xml::xml_unserialize($postStr);
         Yii::trace($post);
         if(empty($get['action'])) return 1;
         if(in_array($get['action'], array('test', 'deleteuser', 'renameuser', 'gettag', 'synlogin', 'synlogout', 'updatepw', 'updatebadwords', 'updatehosts', 'updateapps', 'updateclient', 'updatecredit', 'getcreditsettings', 'updatecreditsettings'))) {
