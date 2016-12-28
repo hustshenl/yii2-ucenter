@@ -60,7 +60,7 @@ class Module extends \yii\base\Module
             ];
         }
 
-        Yii::$app->cache->cachePath = Yii::getAlias($this->cachePath);
+        //Yii::$app->cache->cachePath = Yii::getAlias($this->cachePath);
     }
 
 
